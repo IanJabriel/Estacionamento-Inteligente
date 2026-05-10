@@ -23,6 +23,8 @@ services:
       MQTT_HOST: mosquitto
       MQTT_PORT: 1883
       DB_PATH: /app/data/parking.db
+      STUCK_FREE_MIN: "2"   
+      STUCK_OCCUPIED_MIN: "2"
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       - mosquitto
