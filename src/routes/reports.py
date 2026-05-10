@@ -8,7 +8,7 @@ from database import get_db
 from schemas import TurnoverOut
 from services.reports import turnover
 
-router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
+router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
 
 
 @router.get("/turnover", response_model=TurnoverOut)

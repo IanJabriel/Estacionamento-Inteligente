@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Smart Parking API", version="1.0.0", lifespan=lifespan)
 
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok"}
 

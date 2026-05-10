@@ -5,7 +5,7 @@ from database import get_db
 from schemas import RecommendationOut
 from services.recommendation import build_recommendation
 
-router = APIRouter(prefix="/api/v1/recommendation", tags=["recommendation"])
+router = APIRouter(prefix="/api/v1/recommendation", tags=["Recommendation"])
 
 
 @router.get("", response_model=RecommendationOut)

@@ -8,7 +8,7 @@ from models import Spot
 from schemas import MapOut, SectorOut, SpotOut
 from services.sectors import sector_stats
 
-router = APIRouter(prefix="/api/v1", tags=["map"])
+router = APIRouter(prefix="/api/v1", tags=["Map"])
 
 
 @router.get("/map", response_model=MapOut)

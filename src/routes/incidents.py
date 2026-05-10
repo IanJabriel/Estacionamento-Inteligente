@@ -7,7 +7,7 @@ from database import get_db
 from models import Incident
 from schemas import IncidentOut
 
-router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
+router = APIRouter(prefix="/api/v1/incidents", tags=["Incidents"])
 
 
 @router.get("", response_model=List[IncidentOut])
