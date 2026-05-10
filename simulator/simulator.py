@@ -1,6 +1,4 @@
 """
-Smart Parking MQTT simulator — versão asyncio.
-
 Comportamento:
 - 90 vagas (A/B/C × 30), cada uma roda como corrotina independente
 - Escala de tempo: 1 segundo real = 1 minuto simulado (TIME_FACTOR=60)
@@ -29,10 +27,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("simulator")
 
-# ── Configurações via env (compatíveis com docker-compose.yml existente) ───────
+# Configurações via env (compatíveis com docker-compose.yml existente)
 MQTT_HOST    = os.getenv("MQTT_HOST", "mosquitto")
 MQTT_PORT    = int(os.getenv("MQTT_PORT", "1883"))
-TIME_FACTOR  = int(os.getenv("TIME_FACTOR", "60"))        # 1s real = 1min simulado
+TIME_FACTOR  = int(os.getenv("TIME_FACTOR", "5"))        # 1s real = 1min simulado
 FAILURES_PATH = Path(os.getenv("FAILURES_PATH", "/app/failures.json"))
 
 SECTORS          = ["A", "B", "C"]
@@ -42,7 +40,7 @@ SPOTS_PER_SECTOR = 30
 PEAK_HOURS = [(8, 10), (17, 19)]
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# Helpers 
 
 def simulated_hour() -> int:
     """Retorna a hora simulada atual (0–23), baseada no tempo real escalado."""
@@ -86,7 +84,7 @@ def load_failures() -> dict:
         return {"stuck_occupied": set(), "stuck_free": set(), "flapping": set()}
 
 
-# ── Spot ───────────────────────────────────────────────────────────────────────
+#  Spot 
 
 class ParkingSpot:
     def __init__(self, sector: str, number: int):
@@ -112,7 +110,7 @@ class ParkingSpot:
         log.debug("[%s] → %s", self.id, self.state)
 
 
-# ── Corrotina por vaga ─────────────────────────────────────────────────────────
+# Corrotina por vaga 
 
 async def simulate_spot(client: mqtt.Client, spot: ParkingSpot) -> None:
     """Corrotina que gerencia o ciclo de vida de uma vaga indefinidamente."""
@@ -123,7 +121,7 @@ async def simulate_spot(client: mqtt.Client, spot: ParkingSpot) -> None:
     while True:
         failures = load_failures()
 
-        # ── Stuck occupied ────────────────────────────────────────────────────
+        # Stuck occupied 
         if spot.id in failures["stuck_occupied"]:
             if spot.state != "OCCUPIED":
                 spot.state = "OCCUPIED"
@@ -132,7 +130,7 @@ async def simulate_spot(client: mqtt.Client, spot: ParkingSpot) -> None:
             await asyncio.sleep(10)
             continue
 
-        # ── Stuck free ────────────────────────────────────────────────────────
+        # Stuck free 
         if spot.id in failures["stuck_free"]:
             if spot.state != "FREE":
                 spot.state = "FREE"
@@ -141,7 +139,7 @@ async def simulate_spot(client: mqtt.Client, spot: ParkingSpot) -> None:
             await asyncio.sleep(10)
             continue
 
-        # ── Flapping ──────────────────────────────────────────────────────────
+        #  Flapping
         if spot.id in failures["flapping"]:
             log.info("[FAULT] %s iniciando surto de flapping", spot.id)
             for _ in range(5):
@@ -153,17 +151,17 @@ async def simulate_spot(client: mqtt.Client, spot: ParkingSpot) -> None:
             await asyncio.sleep(5)
             continue
 
-        # ── Transição normal ──────────────────────────────────────────────────
+        # Transição normal 
         wait = wait_seconds(spot.state)
         await asyncio.sleep(wait)
 
         spot.state = "FREE" if spot.state == "OCCUPIED" else "OCCUPIED"
         spot.publish(client)
-        log.info("[%s] → %s (horário sim: %dh, pico: %s)",
+        log.info("[%s] → %s (horário: %dh, pico: %s)",
                  spot.id, spot.state, simulated_hour(), is_peak())
 
 
-# ── Gateway heartbeat ──────────────────────────────────────────────────────────
+# Gateway heartbeat 
 
 async def gateway_heartbeat(client: mqtt.Client) -> None:
     """Publica status online dos gateways a cada 30s reais."""
@@ -180,8 +178,7 @@ async def gateway_heartbeat(client: mqtt.Client) -> None:
         await asyncio.sleep(30)
 
 
-# ── Main ───────────────────────────────────────────────────────────────────────
-
+# Main 
 _SIM_START_REAL = datetime.now()
 
 
