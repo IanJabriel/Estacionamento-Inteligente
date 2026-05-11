@@ -9,16 +9,41 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     restart: unless-stopped
- 
+
   parking-api:
-      build: ./src
-      container_name: parking-api
-      ports:
-        - "8000:8000"
-      volumes:
-        - ./src:/app
-      working_dir: /app
-      command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-      depends_on:
-        - mosquitto
-      restart: unless-stopped
+    build: ./src
+    container_name: parking-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app
+      - parking-data:/app/data
+    working_dir: /app
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      DB_PATH: /app/data/parking.db
+      STUCK_FREE_MIN: "2"   
+      STUCK_OCCUPIED_MIN: "2"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+  simulator:
+    build: ./simulator
+    container_name: parking-simulator
+    volumes:
+      - ./simulator:/app
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      SIM_TICK_SEC: "1.0"
+      SIM_MIN_PER_TICK: "1.0"
+      FAILURES_PATH: /app/failures.json
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+volumes:
+  parking-data:
